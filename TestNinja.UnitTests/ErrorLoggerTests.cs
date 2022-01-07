@@ -30,7 +30,20 @@ public class ErrorLoggerTests
     public void Log_InvalidError_ThrowArgumentNullException(string error)
     {
         // _logger.Log(error);
+
         Assert.That(() => _logger.Log(error), Throws.ArgumentNullException);
-        // Assert.That(() => _logger.Log(error), Throws.Exception.TypeOf<DivideByZeroException>());
+        // Assert.That(() => _logger.Log(error), Throws.Exception.TypeOf<ArgumentNullException>());
+    }
+
+    [Test]
+    public void Log_ValidError_RaiseErrorLoggedEvent()
+    {
+        var id = Guid.Empty;
+        //subscribe to the event
+        _logger.ErrorLogged += (sender, args) => { id = args; };
+        
+        _logger.Log("a");
+        
+        Assert.That(id,Is.Not.EqualTo(Guid.Empty));
     }
 }
