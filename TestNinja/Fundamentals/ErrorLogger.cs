@@ -15,10 +15,16 @@ public class ErrorLogger
             throw new ArgumentNullException();
 
         LastError = error;
-        
+
         //Write the log to a storage;
         //...
-        
-        ErrorLogged?.Invoke(this, Guid.NewGuid());
+
+        OnErrorLogged(Guid.NewGuid());
+    }
+
+    //don't test for private of protected method
+    protected virtual void OnErrorLogged(Guid errorId)
+    {
+        ErrorLogged?.Invoke(this, errorId);
     }
 }

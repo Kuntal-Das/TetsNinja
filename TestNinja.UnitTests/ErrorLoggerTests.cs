@@ -46,4 +46,5 @@ public class ErrorLoggerTests
         
         Assert.That(id,Is.Not.EqualTo(Guid.Empty));
     }
+    
 }
