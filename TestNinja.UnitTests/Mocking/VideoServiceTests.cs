@@ -8,16 +8,15 @@ public class VideoServiceTests
 {
     private VideoService _VideoService;
 
-    [SetUp]
-    public void SetUp()
-    {
-        _VideoService = new VideoService();
-    }
+    // [SetUp]
+    // public void SetUp()
+    // {
+    // }
     
     [Test]
     public void ReadVideoTitle_EmptyFile_ReturnErrorMsg()
     {
-        _VideoService.FileReader = new FakeFileReader();
+        _VideoService = new VideoService(new FakeFileReader());
         
         var result = _VideoService.ReadVideoTitle();
         
