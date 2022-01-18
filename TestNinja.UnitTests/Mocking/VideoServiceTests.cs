@@ -17,7 +17,9 @@ public class VideoServiceTests
     [Test]
     public void ReadVideoTitle_EmptyFile_ReturnErrorMsg()
     {
-        var result = _VideoService.ReadVideoTitle(new FakeFileReader());
+        _VideoService.FileReader = new FakeFileReader();
+        
+        var result = _VideoService.ReadVideoTitle();
         
         Assert.That(result, Does.Contain("error").IgnoreCase);
     }
