@@ -29,7 +29,7 @@ public class HouseKeeperService
 
         foreach (var housekeeper in housekeepers)
         {
-            if (housekeeper.Email == null)
+            if (string.IsNullOrWhiteSpace(housekeeper.Email))
                 continue;
 
             var statementFilename =

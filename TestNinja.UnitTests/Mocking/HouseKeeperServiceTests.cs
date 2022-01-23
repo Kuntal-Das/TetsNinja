@@ -22,7 +22,7 @@ public class HouseKeeperServiceTests
     [SetUp]
     public void SetUp()
     {
-        _houseKeeper = new Housekeeper {Email = "a", FullName = "b", Oid = 1, StatementEmailBody = "c"}
+        _houseKeeper = new Housekeeper {Email = "a", FullName = "b", Oid = 1, StatementEmailBody = "c"};
         _mockUnitOfwork = new Mock<IUnitOfWork>();
         _mockStatementGenerator = new Mock<IStatementGenerator>();
         _mockEmailSender = new Mock<IEmailSender>();
@@ -46,5 +46,20 @@ public class HouseKeeperServiceTests
 
         _mockStatementGenerator.Verify(sg =>
             sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, _stmtDt));
+    }
+
+    [Test]
+    [TestCase(null)]
+    [TestCase(" ")]
+    [TestCase("")]
+    public void SendStatementEmails_WhenHouseKeepersEmailIs_ShouldNotGenerateStament(string email)
+    {
+        _houseKeeper.Email = email;
+
+        _houseKeeperService.SendStatementEmails(_stmtDt);
+
+        _mockStatementGenerator.Verify(sg =>
+                sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, _stmtDt)
+            , Times.Never);
     }
 }
