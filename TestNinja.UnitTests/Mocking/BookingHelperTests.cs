@@ -8,7 +8,7 @@ using TestNinja.Mocking;
 namespace TestNinja.UnitTests.Mocking;
 
 [TestFixture]
-public class BookingHelperTests
+public class BookingHelper_OverlappingBookingsExistTests
 {
     private Mock<IBookingRepo> _mockBookingRepo;
     private Booking _existingBooking;
@@ -30,7 +30,7 @@ public class BookingHelperTests
     }
 
     [Test]
-    public void OverlappingBookingsExist_BookingStartsAndFinishesBeforeAnExistingBooking_ReturnEmptyString()
+    public void BookingStartsAndFinishesBeforeAnExistingBooking_ReturnEmptyString()
     {
         var result = BookingHelper
             .OverlappingBookingsExist(
@@ -48,8 +48,7 @@ public class BookingHelperTests
     }
 
     [Test]
-    public void
-        OverlappingBookingsExist_BookingStartsBeforeAndFinishesInTheMiddleOfAnExistingBooking_ReturnExistingBookingReference()
+    public void BookingStartsBeforeAndFinishesInTheMiddleOfAnExistingBooking_ReturnExistingBookingReference()
     {
         var result = BookingHelper
             .OverlappingBookingsExist(
@@ -64,6 +63,91 @@ public class BookingHelperTests
             );
 
         Assert.That(result, Is.EqualTo(_existingBooking.Reference));
+    }
+
+    [Test]
+    public void BookingStartsBeforeAndFinishesAfterAnExistingBooking_ReturnExistingBookingReference()
+    {
+        var result = BookingHelper
+            .OverlappingBookingsExist(
+                new Booking()
+                {
+                    Id = 1,
+                    ArrivalDate = Before(_existingBooking.ArrivalDate),
+                    DepartureDate = After(_existingBooking.DepartureDate),
+                    Status = string.Empty
+                }
+                , _mockBookingRepo.Object
+            );
+
+        Assert.That(result, Is.EqualTo(_existingBooking.Reference));
+    }
+
+    [Test]
+    public void BookingStartsAndFinishesInTheMiddleOfAnExistingBooking_ReturnExistingBookingReference()
+    {
+        var result = BookingHelper
+            .OverlappingBookingsExist(
+                new Booking()
+                {
+                    Id = 1,
+                    ArrivalDate = After(_existingBooking.ArrivalDate),
+                    DepartureDate = Before(_existingBooking.DepartureDate),
+                    Status = string.Empty
+                }
+                , _mockBookingRepo.Object
+            );
+
+        Assert.That(result, Is.EqualTo(_existingBooking.Reference));
+    }
+
+    [Test]
+    public void BookingStartsInTheMiddleAnExistingBookingButFinishesAfter_ReturnExistingBookingReference()
+    {
+        var result = BookingHelper
+            .OverlappingBookingsExist(
+                new Booking()
+                {
+                    Id = 1,
+                    ArrivalDate = After(_existingBooking.ArrivalDate),
+                    DepartureDate = After(_existingBooking.DepartureDate),
+                    Status = string.Empty
+                }
+                , _mockBookingRepo.Object
+            );
+
+        Assert.That(result, Is.EqualTo(_existingBooking.Reference));
+    }
+
+    [Test]
+    public void BookingStartsAndFinishesAfterAnExistingBooking_ReturnEmptyString()
+    {
+        var result = BookingHelper
+            .OverlappingBookingsExist(
+                new Booking()
+                {
+                    Id = 1,
+                    ArrivalDate = After(_existingBooking.DepartureDate),
+                    DepartureDate = After(_existingBooking.DepartureDate, days: 2),
+                    Status = string.Empty
+                }
+                , _mockBookingRepo.Object
+            );
+
+        Assert.That(result, Is.Empty);
+    }
+
+    public void BookingsOverlapButNewBookingIsCancelled_ReturnEmptyString()
+    {
+        var result = BookingHelper.OverlappingBookingsExist(new Booking
+        {
+            Id = 1,
+            ArrivalDate = After(_existingBooking.ArrivalDate),
+            DepartureDate = After(_existingBooking.DepartureDate),
+            Status = "cancelled",
+        }, _mockBookingRepo.Object);
+
+        Assert.That(result, Is.Empty);
     }
 
     private DateTime Before(DateTime dateTime, int days = 1)
