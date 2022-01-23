@@ -18,6 +18,7 @@ public class HouseKeeperServiceTests
 
     private DateTime _stmtDt = new DateTime(2022, 1, 1);
     private Housekeeper _houseKeeper;
+    private readonly string _statementFilename = "fileName";
 
     [SetUp]
     public void SetUp()
@@ -61,5 +62,45 @@ public class HouseKeeperServiceTests
         _mockStatementGenerator.Verify(sg =>
                 sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, _stmtDt)
             , Times.Never);
+    }
+
+    [Test]
+    public void SendStatementEmails_WhenCalled_EmailTheStatement()
+    {
+        _mockStatementGenerator
+            .Setup(sg => sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, _stmtDt))
+            .Returns(_statementFilename);
+
+        _houseKeeperService.SendStatementEmails(_stmtDt);
+
+        _mockEmailSender.Verify(
+            es => es.EmailFile(
+                _houseKeeper.Email,
+                _houseKeeper.StatementEmailBody,
+                _statementFilename,
+                It.IsAny<string>())
+        );
+    }
+
+    [Test]
+    [TestCase(null)]
+    [TestCase(" ")]
+    [TestCase("")]
+    public void SendStatementEmails_StatementFileNameIs_ShouldNotEmailTheStatement(string statementFile)
+    {
+        _mockStatementGenerator
+            .Setup(sg => sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, _stmtDt))
+            .Returns(statementFile);
+
+        _houseKeeperService.SendStatementEmails(_stmtDt);
+
+        _mockEmailSender.Verify(
+            es => es.EmailFile(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>()),
+            Times.Never()
+        );
     }
 }
