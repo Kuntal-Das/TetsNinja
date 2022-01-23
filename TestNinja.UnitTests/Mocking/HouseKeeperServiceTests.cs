@@ -16,13 +16,21 @@ public class HouseKeeperServiceTests
     private Mock<IXtraMessageBox> _mockXtraMessageBox;
     private HouseKeeperService _houseKeeperService;
 
+    private DateTime _stmtDt = new DateTime(2022, 1, 1);
+    private Housekeeper _houseKeeper;
+
     [SetUp]
     public void SetUp()
     {
+        _houseKeeper = new Housekeeper {Email = "a", FullName = "b", Oid = 1, StatementEmailBody = "c"}
         _mockUnitOfwork = new Mock<IUnitOfWork>();
         _mockStatementGenerator = new Mock<IStatementGenerator>();
         _mockEmailSender = new Mock<IEmailSender>();
         _mockXtraMessageBox = new Mock<IXtraMessageBox>();
+
+        _mockUnitOfwork
+            .Setup(uow => uow.Query<Housekeeper>())
+            .Returns(new List<Housekeeper> {_houseKeeper}.AsQueryable());
 
         _houseKeeperService = new HouseKeeperService(
             _mockUnitOfwork.Object,
@@ -34,16 +42,9 @@ public class HouseKeeperServiceTests
     [Test]
     public void SendStatementEmails_WhenCalled_GenerateStatements()
     {
-        _mockUnitOfwork
-            .Setup(uow => uow.Query<Housekeeper>())
-            .Returns(new List<Housekeeper>
-            {
-                new Housekeeper {Email = "a", FullName = "b", Oid = 1, StatementEmailBody = "c"}
-            }.AsQueryable());
-        var stmtDt = new DateTime(2022, 1, 1);
-        _houseKeeperService.SendStatementEmails(stmtDt);
+        _houseKeeperService.SendStatementEmails(_stmtDt);
 
         _mockStatementGenerator.Verify(sg =>
-            sg.SaveStatement(1, "b", stmtDt));
+            sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, _stmtDt));
     }
 }
