@@ -30,7 +30,7 @@ public class HouseKeeperServiceTests
         _mockXtraMessageBox = new Mock<IXtraMessageBox>();
 
         _mockUnitOfwork
-            .Setup(uow => uow.Query<Housekeeper>())
+            .Setup(work => work.Query<Housekeeper>())
             .Returns(new List<Housekeeper> {_houseKeeper}.AsQueryable());
 
         _houseKeeperService = new HouseKeeperService(
@@ -86,11 +86,11 @@ public class HouseKeeperServiceTests
     [TestCase(null)]
     [TestCase(" ")]
     [TestCase("")]
-    public void SendStatementEmails_StatementFileNameIs_ShouldNotEmailTheStatement(string statementFile)
+    public void SendStatementEmails_StatementFileNameIs_ShouldNotEmailTheStatement(string statementFileName)
     {
         _mockStatementGenerator
             .Setup(sg => sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, _stmtDt))
-            .Returns(statementFile);
+            .Returns(statementFileName);
 
         _houseKeeperService.SendStatementEmails(_stmtDt);
 
@@ -102,5 +102,28 @@ public class HouseKeeperServiceTests
                 It.IsAny<string>()),
             Times.Never()
         );
+    }
+
+    [Test]
+    public void SendStatementEmails_EmailSendingFails_DisplayAMessageBox()
+    {
+        _mockStatementGenerator
+            .Setup(sg => sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, _stmtDt))
+            .Returns(_statementFilename);
+
+        _mockEmailSender
+            .Setup(sender => sender.EmailFile(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>()))
+            .Throws<Exception>();
+
+        _houseKeeperService.SendStatementEmails(_stmtDt);
+
+        _mockXtraMessageBox.Verify(mb => mb.Show(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            MessageBoxButtons.OK));
     }
 }
